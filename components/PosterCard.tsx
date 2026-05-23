@@ -6,6 +6,7 @@ import { Star } from "lucide-react";
 
 interface PosterCardProps {
   slug: string;
+  episodeSlug?: string;
   title: string;
   poster: string;
   episode?: number;
@@ -13,11 +14,12 @@ interface PosterCardProps {
   status?: string;
 }
 
-export default function PosterCard({ slug, title, poster, episode, rating, status }: PosterCardProps) {
+export default function PosterCard({ slug, episodeSlug, title, poster, episode, rating, status }: PosterCardProps) {
   const [imgError, setImgError] = useState(false);
+  const href = episodeSlug ? `/watch/${episodeSlug}` : `/watch/${slug}`;
 
   return (
-    <Link href={`/watch/${slug}`} className="group block min-w-0">
+    <Link href={href} className="group block min-w-0">
       <div className="relative aspect-[3/4.2] rounded-lg overflow-hidden bg-[#12121a] border border-[#1e1e2e] transition-all duration-300 group-hover:scale-[1.03] group-hover:border-[#6366f1]/50 group-hover:shadow-lg group-hover:shadow-[#6366f1]/10">
         {!imgError && poster ? (
           <img src={poster} alt={title} onError={() => setImgError(true)} className="w-full h-full object-cover" loading="lazy" />
@@ -27,20 +29,17 @@ export default function PosterCard({ slug, title, poster, episode, rating, statu
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-        {/* EP badge */}
         {episode != null && episode > 0 && (
           <div className="absolute top-2 right-2 bg-[#6366f1]/90 backdrop-blur text-white text-[10px] font-black px-2 py-0.5 rounded uppercase italic">
             EP {episode}
           </div>
         )}
-        {/* Rating */}
         {rating != null && (
           <div className="absolute top-2 left-2 bg-black/60 backdrop-blur text-[#fbbf24] text-[10px] font-black px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-[#fbbf24]/20">
             <Star className="w-2.5 h-2.5 fill-current" />
             {rating}
           </div>
         )}
-        {/* Status */}
         {status && (
           <div className="absolute bottom-2 left-2 right-2">
             <span className={`block text-center text-[9px] font-black py-1 rounded uppercase italic tracking-wider ${status === "completed" ? "bg-[#6366f1]/80 text-white" : "bg-[#22c55e]/80 text-white"}`}>

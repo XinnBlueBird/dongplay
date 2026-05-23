@@ -8,8 +8,8 @@ export async function GET(
 ) {
   try {
     const { slug } = await params;
-    const episodeSlug = slug.join("/");
-    const url = `https://mydonghua.com/${episodeSlug}/`;
+    // slug is ["way-of-choices.html", "19"] → reconstruct URL
+    const url = `https://mydonghua.com/watch/${slug.join("/")}`;
 
     const res = await fetch(url, {
       headers: {
@@ -19,111 +19,95 @@ export async function GET(
     });
     const html = await res.text();
 
-    // Title from <h1> or <title>
+    // Title from <h1>
     const h1M = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
     const titleTagM = html.match(/<title>([^<]+)<\/title>/i);
-    let title = h1M ? h1M[1].trim() : (titleTagM ? titleTagM[1].replace(/\s*[|\-–].*$/, "").trim() : "");
+    const title = h1M
+      ? h1M[1].trim()
+      : titleTagM
+        ? titleTagM[1].replace(/\s*[|\-–].*$/, "").trim()
+        : "";
 
-    // Extract video iframe URLs - Dailymotion and Okru
+    // Extract video iframe URLs
     const videoUrls: { url: string; source: string }[] = [];
 
-    // Match all iframes
+    // Match all iframes with src
     const iframeRe = /<iframe[^>]*src="([^"]+)"[^>]*>/gi;
     let iframeM;
     while ((iframeM = iframeRe.exec(html)) !== null) {
       const src = iframeM[1];
-      if (src.includes("dailymotion.com/embed")) {
-        videoUrls.push({ url: src, source: "Dailymotion" });
-      } else if (src.includes("ok.ru/videoembed")) {
-        videoUrls.push({ url: src, source: "Okru" });
-      } else if (src.includes("youtube.com/embed")) {
-        videoUrls.push({ url: src, source: "YouTube" });
-      }
-    }
-
-    // Also check for srcset or data-src patterns
-    const dataSrcRe = /data-src="([^"]*(?:dailymotion|ok\.ru)[^"]*)"/gi;
-    while ((iframeM = dataSrcRe.exec(html)) !== null) {
-      const src = iframeM[1];
-      if (src.includes("dailymotion.com/embed") && !videoUrls.find((v) => v.url === src)) {
-        videoUrls.push({ url: src, source: "Dailymotion" });
-      } else if (src.includes("ok.ru/videoembed") && !videoUrls.find((v) => v.url === src)) {
-        videoUrls.push({ url: src, source: "Okru" });
-      }
-    }
-
-    // Also check for raw embed URLs in the page
-    const embedRe = /(https?:\/\/(?:www\.)?dailymotion\.com\/embed\/video\/[a-zA-Z0-9]+)/g;
-    while ((iframeM = embedRe.exec(html)) !== null) {
-      if (!videoUrls.find((v) => v.url === iframeM![1])) {
-        videoUrls.push({ url: iframeM[1], source: "Dailymotion" });
-      }
-    }
-
-    const okruRe = /(https?:\/\/ok\.ru\/videoembed\/\d+)/g;
-    while ((iframeM = okruRe.exec(html)) !== null) {
-      if (!videoUrls.find((v) => v.url === iframeM![1])) {
-        videoUrls.push({ url: iframeM[1], source: "Okru" });
+      if (
+        src.includes("dailymotion.com") ||
+        src.includes("ok.ru/videoembed") ||
+        src.includes("youtube.com/embed")
+      ) {
+        const source = src.includes("dailymotion")
+          ? "Dailymotion"
+          : src.includes("ok.ru")
+            ? "Okru"
+            : "YouTube";
+        if (!videoUrls.find((v) => v.url === src)) {
+          videoUrls.push({ url: src, source });
+        }
       }
     }
 
     const videoUrl = videoUrls.length > 0 ? videoUrls[0].url : "";
 
-    // Extract poster image
-    const ogImageM = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i);
+    // Poster from og:image
+    const ogImageM = html.match(
+      /<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i
+    );
     const poster = ogImageM ? ogImageM[1] : "";
 
-    // Extract episode number from title
-    const epNumM = title.match(/Episode\s+(\d+)/i) || title.match(/EP\s*(\d+)/i);
-    const episodeNumber = epNumM ? parseInt(epNumM[1]) : 0;
+    // Episode number from URL
+    const epFromUrl = slug.length > 1 ? parseInt(slug[slug.length - 1]) : 0;
+    const epFromTitle = title.match(/Episode\s+(\d+)/i);
+    const episodeNumber = epFromUrl || (epFromTitle ? parseInt(epFromTitle[1]) : 0);
 
-    // Extract all episode links from the page
+    // Episode links: href="https://mydonghua.com/watch/{series}.html/{number}"
     const episodes: { number: number; slug: string }[] = [];
-    const epLinkRe = /href="\/([\w-]+-episode-(\d+)[^"]*?)\/?"/gi;
+    const epLinkRe = /href="https:\/\/mydonghua\.com\/watch\/([^"]+\.html)\/(\d+)(?:\/?(?:#|")|")/g;
     let epM;
     const seenEps = new Set<string>();
     while ((epM = epLinkRe.exec(html)) !== null) {
-      const epSlug = epM[1].replace(/\/$/, "");
+      const seriesPart = epM[1];
       const epNum = parseInt(epM[2]);
+      const epSlug = `watch/${seriesPart}/${epNum}`;
       if (seenEps.has(epSlug)) continue;
       seenEps.add(epSlug);
       episodes.push({ number: epNum, slug: epSlug });
     }
     episodes.sort((a, b) => a.number - b.number);
 
-    // Extract synopsis
-    const synopsisRe = /<(?:div|p|span)[^>]*class="[^"]*(?:synopsis|description|entry-content|post-content)[^"]*"[^>]*>([\s\S]*?)<\/(?:div|p|span)>/gi;
+    // Series slug from episode links
+    let seriesSlug = "";
+    if (slug.length >= 1) {
+      // "way-of-choices.html" → "way-of-choices"
+      seriesSlug = slug[0].replace(/\.html$/, "");
+    }
+
+    // Synopsis: longest paragraph
     let synopsis = "";
-    let synM;
-    while ((synM = synopsisRe.exec(html)) !== null) {
-      const text = synM[1].replace(/<[^>]*>/g, "").trim();
-      if (text.length > synopsis.length && text.length > 20) synopsis = text;
-    }
-
-    // Fallback: longest paragraph
-    if (!synopsis) {
-      const pRe = /<p[^>]*>([\s\S]*?)<\/p>/g;
-      let pM;
-      while ((pM = pRe.exec(html)) !== null) {
-        const text = pM[1].replace(/<[^>]*>/g, "").trim();
-        if (text.length > synopsis.length && text.length > 30 && !text.includes("{") && !text.includes("function")) {
-          synopsis = text;
-        }
+    const pRe = /<p[^>]*>([\s\S]*?)<\/p>/g;
+    let pM;
+    while ((pM = pRe.exec(html)) !== null) {
+      const text = pM[1].replace(/<[^>]*>/g, "").trim();
+      if (
+        text.length > synopsis.length &&
+        text.length > 30 &&
+        !text.includes("{") &&
+        !text.includes("function") &&
+        !text.includes("cookie")
+      ) {
+        synopsis = text;
       }
     }
 
-    // Extract genres
+    // Genres from links
     const genres: string[] = [];
-    const genreRe = /genre[s]?[^<]*<[^>]*>([^<]+)</gi;
-    let gM;
-    while ((gM = genreRe.exec(html)) !== null) {
-      const genre = gM[1].trim();
-      if (genre && genre.length < 30 && !genre.includes("Genre")) {
-        genres.push(genre);
-      }
-    }
-    // Also check for tag/category links
     const tagRe = /href="[^"]*genre[^"]*"[^>]*>([^<]+)</gi;
+    let gM;
     while ((gM = tagRe.exec(html)) !== null) {
       const genre = gM[1].trim();
       if (genre && genre.length < 30 && !genres.includes(genre)) {
@@ -135,17 +119,6 @@ export async function GET(
     const statusM = html.match(/(Ongoing|Completed|Upcoming)/i);
     const status = statusM ? statusM[1].toLowerCase() : "ongoing";
 
-    // Series slug from breadcrumb or episode pattern
-    let seriesSlug = "";
-    const breadcrumbM = html.match(/href="\/([\w-]+-episode-\d+[^"]*?)"/i);
-    if (breadcrumbM) {
-      seriesSlug = breadcrumbM[1].replace(/episode-\d+.*/, "").replace(/-$/, "");
-    }
-    // Better: derive from current slug
-    if (!seriesSlug && episodeSlug) {
-      seriesSlug = episodeSlug.replace(/-episode-\d+.*/, "");
-    }
-
     return NextResponse.json({
       title,
       videoUrl,
@@ -153,7 +126,7 @@ export async function GET(
       poster,
       episodeNumber,
       episodes,
-      synopsis,
+      synopsis: synopsis.substring(0, 1000),
       genres,
       status,
       seriesSlug,

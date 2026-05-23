@@ -25,75 +25,63 @@ interface DonghuaItem {
   poster: string;
   episode: number;
   status: string;
+  episodeSlug: string;
 }
 
 function parseHomepage(html: string): DonghuaItem[] {
   const items: DonghuaItem[] = [];
   const seen = new Set<string>();
 
-  // Parse article elements with links - mydonghua.com pattern
-  // Articles contain links like: <a href="/way-of-choices-episode-19-english-subtitles/">
-  const articleRe = /<article[^>]*>([\s\S]*?)<\/article>/gi;
+  // Pattern: https://mydonghua.com/watch/{series-slug}.html/{episode_number}
+  const linkRe = /href="(https:\/\/mydonghua\.com\/watch\/([^"]+?)(?:\.html)?(?:\/(\d+))?)"\s*(?:class="[^"]*")?\s*>([^<]*)</g;
   let m;
-  while ((m = articleRe.exec(html)) !== null) {
-    const block = m[1];
+  while ((m = linkRe.exec(html)) !== null) {
+    const fullUrl = m[1];
+    const seriesSlug = m[2];
+    const episodeNum = m[3];
+    const linkText = m[4].trim();
 
-    // Extract link
-    const hrefM = block.match(/href="\/([^"]+\/)"/);
-    if (!hrefM) continue;
-    const slug = hrefM[1].replace(/\/$/, "");
-    if (seen.has(slug)) continue;
-    seen.add(slug);
+    // Skip if no episode or already seen
+    if (!episodeNum) continue;
+    if (seen.has(seriesSlug + "/" + episodeNum)) continue;
+    seen.add(seriesSlug + "/" + episodeNum);
 
-    // Extract title
-    const titleM = block.match(/title="([^"]+)"/) || block.match(/<[^>]*class="[^"]*title[^"]*"[^>]*>([^<]+)</i) || block.match(/alt="([^"]+)"/);
-    let title = titleM ? titleM[1].trim() : "";
-    if (!title) continue;
+    // Clean title from link text
+    let title = linkText
+      .replace(/English Subtitles?/i, "")
+      .replace(/Sub (Esp|Indo|Thai)/i, "")
+      .replace(/Episode\s+\d+/i, "")
+      .trim();
 
-    // Clean up title
-    title = title.replace(/English Subtitles?/i, "").replace(/Sub (Esp|Indo|Thai)/i, "").trim();
+    // If title is empty or too short, try getting from context
+    if (title.length < 3) {
+      const ctxStart = Math.max(0, m.index - 600);
+      const ctxEnd = Math.min(html.length, m.index + 200);
+      const ctx = html.substring(ctxStart, ctxEnd);
 
-    // Extract poster image
-    const imgM = block.match(/src="(https?:\/\/[^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"/i) || block.match(/data-src="(https?:\/\/[^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"/i);
+      const altM = ctx.match(/alt="([^"]+)"/);
+      const h2M = ctx.match(/<h[12][^>]*>([^<]+)</);
+      title = (altM?.[1] || h2M?.[1] || seriesSlug)
+        .replace(/English Subtitles?/i, "")
+        .replace(/Episode\s+\d+/i, "")
+        .trim();
+    }
+
+    // Get poster from nearby img
+    const ctxStart = Math.max(0, m.index - 800);
+    const ctxEnd = Math.min(html.length, m.index + 100);
+    const ctx = html.substring(ctxStart, ctxEnd);
+    const imgM = ctx.match(/src="(https?:\/\/[^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"/i);
     const poster = imgM ? imgM[1] : "";
 
-    // Extract episode number
-    const epM = block.match(/Episode\s+(\d+)/i) || block.match(/EP\s*(\d+)/i) || title.match(/Episode\s+(\d+)/i) || title.match(/EP\s*(\d+)/i);
-    const episode = epM ? parseInt(epM[1]) : 0;
-
-    // Status
-    const statusM = block.match(/(ongoing|completed)/i);
-    const status = statusM ? statusM[1].toLowerCase() : "ongoing";
-
-    items.push({ slug, title, poster, episode, status });
-  }
-
-  // Fallback: parse links directly if no articles found
-  if (items.length === 0) {
-    const linkRe = /href="\/([\w-]+-episode-\d+[^"]*?)\/?"/gi;
-    let lm;
-    while ((lm = linkRe.exec(html)) !== null) {
-      const slug = lm[1].replace(/\/$/, "");
-      if (seen.has(slug)) continue;
-      seen.add(slug);
-
-      // Try to get nearby title
-      const contextStart = Math.max(0, lm.index - 500);
-      const contextEnd = Math.min(html.length, lm.index + 500);
-      const context = html.substring(contextStart, contextEnd);
-
-      const titleM = context.match(/title="([^"]+)"/) || context.match(/alt="([^"]+)"/) || context.match(/>([^<]*Episode[^<]*)</i);
-      let title = titleM ? titleM[1].trim() : slug.replace(/-/g, " ");
-      title = title.replace(/English Subtitles?/i, "").replace(/Sub (Esp|Indo|Thai)/i, "").trim();
-
-      const imgM = context.match(/src="(https?:\/\/[^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"/i) || context.match(/data-src="(https?:\/\/[^"]+\.(?:jpg|jpeg|png|webp)[^"]*)"/i);
-      const poster = imgM ? imgM[1] : "";
-
-      const epM = title.match(/Episode\s+(\d+)/i) || title.match(/EP\s*(\d+)/i);
-      const episode = epM ? parseInt(epM[1]) : 0;
-
-      items.push({ slug, title, poster, episode, status: "ongoing" });
-    }
+    items.push({
+      slug: seriesSlug,
+      title,
+      poster,
+      episode: parseInt(episodeNum),
+      status: "ongoing",
+      episodeSlug: fullUrl.replace("https://mydonghua.com/", ""),
+    });
   }
 
   return items;

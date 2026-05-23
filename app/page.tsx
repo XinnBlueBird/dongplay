@@ -11,6 +11,7 @@ interface DonghuaItem {
   poster: string;
   episode: number;
   status: string;
+  episodeSlug: string;
 }
 
 const FILTERS = ["All", "Ongoing", "Completed"] as const;
@@ -76,7 +77,7 @@ export default function HomePage() {
               {hero.episode > 0 && <span className="text-xs px-2 py-0.5 bg-[#6366f1]/20 text-[#818cf8] rounded font-bold">EP {hero.episode}</span>}
               <span className="text-xs px-2 py-0.5 bg-[#12121a] border border-[#1e1e2e] text-[#94a3b8] rounded capitalize">{hero.status}</span>
             </div>
-            <Link href={`/watch/${hero.slug}`} className="inline-flex items-center gap-2 bg-[#6366f1] hover:bg-[#4f46e5] text-white font-bold text-sm px-5 py-2.5 rounded-lg transition-colors w-fit uppercase italic">
+            <Link href={`/watch/${hero.episodeSlug}`} className="inline-flex items-center gap-2 bg-[#6366f1] hover:bg-[#4f46e5] text-white font-bold text-sm px-5 py-2.5 rounded-lg transition-colors w-fit uppercase italic">
               <Play className="w-4 h-4 fill-white" /> Watch Now
             </Link>
           </div>
@@ -112,7 +113,7 @@ export default function HomePage() {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {paginated.map((item) => (
-              <PosterCard key={item.slug} slug={item.slug} title={item.title} poster={item.poster} episode={item.episode} status={item.status} />
+              <PosterCard key={item.episodeSlug} slug={item.slug} episodeSlug={item.episodeSlug} title={item.title} poster={item.poster} episode={item.episode} status={item.status} />
             ))}
           </div>
 
@@ -141,7 +142,7 @@ export default function HomePage() {
             <h3 className="text-sm font-bold text-white uppercase italic mb-4">Top Popular</h3>
             <div className="space-y-3">
               {topPopular.map((item, idx) => (
-                <Link key={item.slug} href={`/watch/${item.slug}`} className="flex items-center gap-3 group min-w-0">
+                <Link key={item.episodeSlug} href={`/watch/${item.episodeSlug}`} className="flex items-center gap-3 group min-w-0">
                   <span className={`text-lg font-black w-6 text-center shrink-0 ${idx === 0 ? "text-[#fbbf24]" : idx === 1 ? "text-[#c0c0c0]" : idx === 2 ? "text-[#cd7f32]" : "text-[#64748b]"}`}>
                     {idx + 1}
                   </span>
