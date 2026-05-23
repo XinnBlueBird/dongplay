@@ -5,29 +5,28 @@ import PosterCard from "@/components/PosterCard";
 import { BookmarkX } from "lucide-react";
 
 interface DonghuaItem {
-  id: string;
+  slug: string;
   title: string;
   poster: string;
-  latestEpisode: number;
-  rating: number | null;
+  episode: number;
   status: string;
 }
 
 export default function BookmarksPage() {
-  const [bookmarkIds, setBookmarkIds] = useState<string[]>([]);
+  const [bookmarkSlugs, setBookmarkSlugs] = useState<string[]>([]);
   const [data, setData] = useState<DonghuaItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const bm: string[] = JSON.parse(localStorage.getItem("dongplay-bookmarks") || "[]");
-    setBookmarkIds(bm);
+    setBookmarkSlugs(bm);
 
     if (bm.length > 0) {
       fetch("/api/donghua")
         .then((r) => r.json())
         .then((j) => {
           if (j.data) {
-            setData(j.data.filter((d: DonghuaItem) => bm.includes(d.id)));
+            setData(j.data.filter((d: DonghuaItem) => bm.some((b) => d.slug.startsWith(b) || b.startsWith(d.slug.split("-episode-")[0]))));
           }
         })
         .catch(() => {})
@@ -39,8 +38,8 @@ export default function BookmarksPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-black text-white uppercase italic mb-1">Bookmark</h1>
-      <p className="text-sm text-[#94a3b8] mb-6">{bookmarkIds.length} tersimpan</p>
+      <h1 className="text-2xl font-black text-white uppercase italic mb-1">Bookmarks</h1>
+      <p className="text-sm text-[#94a3b8] mb-6">{bookmarkSlugs.length} saved</p>
 
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
@@ -51,13 +50,13 @@ export default function BookmarksPage() {
       ) : data.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <BookmarkX className="w-16 h-16 text-[#1e1e2e] mb-4" />
-          <h3 className="text-lg font-bold text-[#94a3b8] mb-2">Belum ada bookmark</h3>
-          <p className="text-sm text-[#64748b]">Mulai browse dan bookmark donghua favoritmu.</p>
+          <h3 className="text-lg font-bold text-[#94a3b8] mb-2">No bookmarks yet</h3>
+          <p className="text-sm text-[#64748b]">Start browsing and bookmark your favorite donghua.</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {data.map((d) => (
-            <PosterCard key={d.id} id={d.id} title={d.title} poster={d.poster} latestEpisode={d.latestEpisode} rating={d.rating} status={d.status} />
+            <PosterCard key={d.slug} slug={d.slug} title={d.title} poster={d.poster} episode={d.episode} status={d.status} />
           ))}
         </div>
       )}

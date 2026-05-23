@@ -7,8 +7,8 @@ import Footer from "@/components/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "DongPlay — Nonton Donghua Gratis",
-  description: "Nonton donghua subtitle Indonesia gratis, tanpa iklan. Update otomatis setiap ada episode baru.",
+  title: "DongPlay — Nonton Donghua Gratis No Ads",
+  description: "Nonton donghua subtitle gratis, tanpa iklan. Stream donghua terbaru dari Dailymotion dan Okru.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

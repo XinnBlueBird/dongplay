@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Play, Search, Menu, X, User, Home, Film, Clock, Bookmark } from "lucide-react";
+import { Play, Search, Menu, X, User, Home, Film, Bookmark } from "lucide-react";
 import clsx from "clsx";
 
 export default function Navbar() {
@@ -20,9 +20,8 @@ export default function Navbar() {
 
   const links = [
     { href: "/", label: "Home", icon: Home },
-    { href: "/series", label: "Series", icon: Film },
-    { href: "/history", label: "History", icon: Clock },
-    { href: "/bookmarks", label: "Bookmark", icon: Bookmark },
+    { href: "/series", label: "All Series", icon: Film },
+    { href: "/bookmarks", label: "Bookmarks", icon: Bookmark },
   ];
 
   const handleSearch = () => {
@@ -74,7 +73,7 @@ export default function Navbar() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                placeholder="Cari donghua..."
+                placeholder="Search donghua..."
                 className="bg-transparent text-sm text-white placeholder-[#64748b] outline-none ml-2 w-36 md:w-52"
                 autoFocus
               />

@@ -40,7 +40,7 @@ export default function ProfilePage() {
     if (!newUsername.trim()) return;
     const updated = { ...user, username: newUsername, email: newEmail, avatar: newUsername.charAt(0).toUpperCase() };
     localStorage.setItem("dongplay-user", JSON.stringify(updated));
-    setUser(updated);
+    setUser(updated as UserData);
     setEditing(false);
   };
 
@@ -55,7 +55,6 @@ export default function ProfilePage() {
   return (
     <div className="max-w-xl mx-auto px-4 py-10">
       <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6 text-center">
-        {/* Avatar */}
         <div className="w-20 h-20 rounded-full bg-[#6366f1] flex items-center justify-center mx-auto mb-4">
           <span className="text-3xl font-black text-white">{user.avatar}</span>
         </div>
@@ -65,8 +64,8 @@ export default function ProfilePage() {
             <input value={newUsername} onChange={(e) => setNewUsername(e.target.value)} placeholder="Username" className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#6366f1]" />
             <input value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="Email" className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#6366f1]" />
             <div className="flex gap-2">
-              <button onClick={handleSave} className="flex-1 bg-[#6366f1] text-white py-2 rounded-lg text-sm font-bold">Simpan</button>
-              <button onClick={() => setEditing(false)} className="flex-1 bg-[#0a0a0f] border border-[#1e1e2e] text-[#94a3b8] py-2 rounded-lg text-sm font-bold">Batal</button>
+              <button onClick={handleSave} className="flex-1 bg-[#6366f1] text-white py-2 rounded-lg text-sm font-bold">Save</button>
+              <button onClick={() => setEditing(false)} className="flex-1 bg-[#0a0a0f] border border-[#1e1e2e] text-[#94a3b8] py-2 rounded-lg text-sm font-bold">Cancel</button>
             </div>
           </div>
         ) : (
@@ -76,7 +75,6 @@ export default function ProfilePage() {
           </>
         )}
 
-        {/* Stats */}
         <div className="flex justify-center gap-6 mt-6 pt-6 border-t border-[#1e1e2e]">
           <div className="text-center">
             <div className="flex items-center gap-1 text-[#6366f1] mb-1"><Bookmark className="w-4 h-4" /><span className="text-lg font-black">{bookmarkCount}</span></div>
@@ -84,11 +82,10 @@ export default function ProfilePage() {
           </div>
           <div className="text-center">
             <div className="flex items-center gap-1 text-[#22d3ee] mb-1"><Clock className="w-4 h-4" /><span className="text-lg font-black">{historyCount}</span></div>
-            <p className="text-xs text-[#64748b]">Ditonton</p>
+            <p className="text-xs text-[#64748b]">Watched</p>
           </div>
         </div>
 
-        {/* Actions */}
         <div className="flex flex-col gap-2 mt-6">
           {!editing && (
             <button onClick={() => setEditing(true)} className="flex items-center justify-center gap-2 w-full bg-[#0a0a0f] border border-[#1e1e2e] text-[#94a3b8] hover:text-white hover:border-[#6366f1] py-2.5 rounded-lg text-sm font-bold transition-colors">

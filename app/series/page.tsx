@@ -2,14 +2,13 @@
 
 import { useEffect, useState, useMemo } from "react";
 import PosterCard from "@/components/PosterCard";
-import { Search, SlidersHorizontal } from "lucide-react";
+import { Search } from "lucide-react";
 
 interface DonghuaItem {
-  id: string;
+  slug: string;
   title: string;
   poster: string;
-  latestEpisode: number;
-  rating: number | null;
+  episode: number;
   status: string;
 }
 
@@ -24,12 +23,11 @@ export default function SeriesPage() {
   const [sort, setSort] = useState("Latest");
 
   useEffect(() => {
-    // Read ?q= from URL
     const params = new URLSearchParams(window.location.search);
     const q = params.get("q") || "";
     setQuery(q);
 
-    fetch("/api/donghua")
+    fetch("/api/donghua/series")
       .then((r) => r.json())
       .then((j) => { if (j.data) setData(j.data); })
       .catch(() => {})
@@ -38,7 +36,6 @@ export default function SeriesPage() {
 
   const filtered = useMemo(() => {
     let results = [...data];
-
     if (query) {
       const q = query.toLowerCase();
       results = results.filter((d) => d.title.toLowerCase().includes(q));
@@ -51,7 +48,7 @@ export default function SeriesPage() {
         results.sort((a, b) => a.title.localeCompare(b.title));
         break;
       case "Most Episodes":
-        results.sort((a, b) => b.latestEpisode - a.latestEpisode);
+        results.sort((a, b) => b.episode - a.episode);
         break;
       default:
         break;
@@ -61,14 +58,13 @@ export default function SeriesPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-6">
-      <h1 className="text-2xl font-black text-white uppercase italic mb-1">Semua Series</h1>
-      <p className="text-sm text-[#94a3b8] mb-6">{data.length} donghua tersedia</p>
+      <h1 className="text-2xl font-black text-white uppercase italic mb-1">All Series</h1>
+      <p className="text-sm text-[#94a3b8] mb-6">{data.length} donghua available</p>
 
-      {/* Search + Filters */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-6">
         <div className="flex-1 flex items-center bg-[#12121a] border border-[#1e1e2e] rounded-lg px-3 py-2 w-full sm:w-auto">
           <Search className="w-4 h-4 text-[#64748b]" />
-          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Cari judul donghua..." className="bg-transparent text-sm text-white placeholder-[#64748b] outline-none ml-2 w-full" />
+          <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search donghua title..." className="bg-transparent text-sm text-white placeholder-[#64748b] outline-none ml-2 w-full" />
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           {FILTERS.map((f) => (
@@ -84,10 +80,8 @@ export default function SeriesPage() {
         </div>
       </div>
 
-      {/* Results count */}
-      <p className="text-xs text-[#64748b] mb-4">{filtered.length} hasil</p>
+      <p className="text-xs text-[#64748b] mb-4">{filtered.length} results</p>
 
-      {/* Grid */}
       {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {Array.from({ length: 12 }).map((_, i) => (
@@ -96,12 +90,12 @@ export default function SeriesPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-20">
-          <p className="text-[#94a3b8]">Tidak ada donghua ditemukan.</p>
+          <p className="text-[#94a3b8]">No donghua found.</p>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
           {filtered.map((d) => (
-            <PosterCard key={d.id} id={d.id} title={d.title} poster={d.poster} latestEpisode={d.latestEpisode} rating={d.rating} status={d.status} />
+            <PosterCard key={d.slug} slug={d.slug} title={d.title} poster={d.poster} episode={d.episode} status={d.status} />
           ))}
         </div>
       )}

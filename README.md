@@ -1,91 +1,91 @@
-# DongPlay
+# DongPlay — Donghua Streaming App
 
-Watch donghua (Chinese anime) for free. No ads, no popups, no subscriptions. Just press play.
-
-## Why DongPlay Exists
-
-Donghua fans face a fragmented experience: official platforms are bloated with ads, geo-restrictions, and paywalls. DongPlay strips all of that away. It scrapes donghuafast.site for catalog data and embeds video from a clean worker endpoint (get.timorles23.workers.dev). The DongPlay interface itself has zero ads — no banners, no popups, no tracking pixels.
-
-## How It Works
-
-1. **Catalog**: DongPlay scrapes donghuafast.site for donghua listings, metadata, ratings, and episode data
-2. **Video**: Episodes are embedded via iframe from `get.timorles23.workers.dev/v/{id}`
-3. **Zero Ads**: Our interface is completely ad-free. We act as a curated directory and clean player.
+A modern, ad-free donghua streaming platform built with Next.js 16. DongPlay scrapes content from public sources and provides a clean interface for watching donghua with Dailymotion and Okru video embeds.
 
 ## Features
 
-### Browse & Discover
-- Full catalog with poster cards, ratings, and episode counts
-- Status filters: All, Ongoing, Completed
-- Sort by Latest or A-Z
-- Full-text search by title
-- Top Popular ranked list with view counts
-
-### Watch Anywhere
-- Embedded video player from workers.dev (no ads, no popups)
-- Episode selector grid for quick navigation
-- Previous/Next episode buttons
-- Responsive 16:9 player on all devices
-- iframe with full PIP and fullscreen support
-
-### Bookmark System
-- Save favorites with one click (localStorage)
-- Dedicated bookmarks page
-- Persistent across sessions
-
-### Homepage
-- Featured hero section with blurred poster background
-- Latest Updates grid (responsive: 2-6 columns)
-- Genre/status filter pills
-- Top Popular sidebar ranked #1-5
+- **Latest Release** — Browse the newest donghua episodes updated in real-time
+- **All Series** — Full searchable catalog with filters (ongoing/completed) and sorting
+- **Video Player** — Embedded Dailymotion/Okru players with server switching
+- **Bookmarks** — Save your favorite series locally
+- **Watch History** — Track what you've watched with continue-watching support
+- **User Profiles** — Local login/register with profile management
+- **Mobile Responsive** — Works perfectly on phones, tablets, and desktop
+- **Dark Theme** — Easy on the eyes with a sleek dark UI
+- **No Ads** — Clean, distraction-free viewing experience
 
 ## Tech Stack
 
 - **Framework**: Next.js 16 (App Router)
-- **Language**: TypeScript (strict)
+- **Language**: TypeScript
 - **Styling**: Tailwind CSS v4
-- **Icons**: lucide-react
-- **Fonts**: Inter (Google Fonts)
-- **Data Source**: donghuafast.site (scraper)
-- **Video Source**: get.timorles23.workers.dev
+- **Icons**: Lucide React
+- **Utilities**: clsx
+- **Video**: Dailymotion & Okru iframe embeds
 
 ## Getting Started
 
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+
+### Installation
+
 ```bash
-git clone <repo-url>
-cd dongplay
 npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Build
+
+```bash
+npm run build
+npm start
+```
 
 ## Project Structure
 
 ```
 dongplay/
 ├── app/
-│   ├── layout.tsx                      # Root layout (dark theme, Navbar)
-│   ├── globals.css                     # Tailwind v4 + custom dark theme
-│   ├── page.tsx                        # Homepage (hero, grid, sidebar)
-│   ├── browse/page.tsx                 # Browse all with filters & search
-│   ├── bookmarks/page.tsx              # Saved donghua (localStorage)
-│   ├── watch/[id]/page.tsx             # Player page (iframe + episodes)
-│   └── api/
-│       └── donghua/
-│           ├── route.ts                # Homepage scraper
-│           ├── [id]/route.ts           # Detail page scraper
-│           └── [id]/[episodeId]/route.ts  # Episode video URL scraper
+│   ├── api/donghua/
+│   │   ├── route.ts              # Homepage scraper
+│   │   ├── series/route.ts       # All series scraper
+│   │   └── episode/[...slug]/    # Episode detail scraper
+│   ├── bookmarks/page.tsx        # Bookmarked series
+│   ├── history/page.tsx          # Watch history
+│   ├── login/page.tsx            # Login/register
+│   ├── profile/page.tsx          # User profile
+│   ├── series/page.tsx           # All series listing
+│   ├── watch/[...slug]/page.tsx  # Video player
+│   ├── layout.tsx                # Root layout
+│   ├── globals.css               # Global styles
+│   └── page.tsx                  # Homepage
 ├── components/
-│   ├── Navbar.tsx                      # Navigation with search & mobile drawer
-│   └── PosterCard.tsx                  # Donghua poster card with badges
-├── lib/
-│   └── types.ts                        # TypeScript interfaces
-├── README.md
-├── package.json
-├── tsconfig.json
-└── next.config.ts
+│   ├── Navbar.tsx                # Navigation bar
+│   ├── Footer.tsx                # Footer
+│   └── PosterCard.tsx            # Donghua card component
+└── README.md
 ```
+
+## API Routes
+
+| Endpoint | Description |
+|----------|-------------|
+| `GET /api/donghua` | Scrapes homepage for latest releases |
+| `GET /api/donghua/series` | Scrapes multiple pages for full series list |
+| `GET /api/donghua/episode/[...slug]` | Scrapes episode page for video URL, episodes, metadata |
+
+## Data Sources
+
+Content is scraped from mydonghua.com (WordPress). Video is hosted on:
+- **Dailymotion** — `dailymotion.com/embed/video/{id}`
+- **Okru** — `ok.ru/videoembed/{id}`
+
+Both services provide standard iframe embeds that work on all devices.
 
 ## License
 

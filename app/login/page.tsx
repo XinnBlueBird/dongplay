@@ -18,31 +18,29 @@ export default function LoginPage() {
     setError("");
 
     if (!username.trim() || !password.trim()) {
-      setError("Username dan password wajib diisi.");
+      setError("Username and password are required.");
       return;
     }
 
     if (mode === "register") {
       if (!email.trim()) {
-        setError("Email wajib diisi.");
+        setError("Email is required.");
         return;
       }
       if (password !== confirm) {
-        setError("Password tidak cocok.");
+        setError("Passwords do not match.");
         return;
       }
       localStorage.setItem("dongplay-user", JSON.stringify({ username, email, avatar: username.charAt(0).toUpperCase() }));
     } else {
-      // Login - check if registered
       const existing = localStorage.getItem("dongplay-user");
       if (existing) {
         const user = JSON.parse(existing);
         if (user.username !== username) {
-          setError("Username tidak ditemukan.");
+          setError("Username not found.");
           return;
         }
       } else {
-        // Auto-create for first time
         localStorage.setItem("dongplay-user", JSON.stringify({ username, email: "", avatar: username.charAt(0).toUpperCase() }));
       }
     }
@@ -59,11 +57,10 @@ export default function LoginPage() {
             <Play className="w-6 h-6 text-white fill-white" />
           </div>
           <h1 className="text-2xl font-black text-white uppercase italic">DongPlay</h1>
-          <p className="text-sm text-[#94a3b8] mt-1">{mode === "login" ? "Masuk ke akun Anda" : "Buat akun baru"}</p>
+          <p className="text-sm text-[#94a3b8] mt-1">{mode === "login" ? "Sign in to your account" : "Create a new account"}</p>
         </div>
 
         <div className="bg-[#12121a] border border-[#1e1e2e] rounded-xl p-6">
-          {/* Toggle */}
           <div className="flex gap-2 mb-6">
             <button onClick={() => { setMode("login"); setError(""); }} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${mode === "login" ? "bg-[#6366f1] text-white" : "bg-[#0a0a0f] text-[#94a3b8] hover:text-white"}`}>
               Login
@@ -76,22 +73,22 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="flex items-center gap-1.5 text-xs font-bold text-[#94a3b8] uppercase mb-1.5"><User className="w-3 h-3" /> Username</label>
-              <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Masukkan username" className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#475569] outline-none focus:border-[#6366f1] transition-colors" />
+              <input value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Enter username" className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#475569] outline-none focus:border-[#6366f1] transition-colors" />
             </div>
             {mode === "register" && (
               <div>
                 <label className="flex items-center gap-1.5 text-xs font-bold text-[#94a3b8] uppercase mb-1.5"><Mail className="w-3 h-3" /> Email</label>
-                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Masukkan email" className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#475569] outline-none focus:border-[#6366f1] transition-colors" />
+                <input value={email} onChange={(e) => setEmail(e.target.value)} type="email" placeholder="Enter email" className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#475569] outline-none focus:border-[#6366f1] transition-colors" />
               </div>
             )}
             <div>
               <label className="flex items-center gap-1.5 text-xs font-bold text-[#94a3b8] uppercase mb-1.5"><Lock className="w-3 h-3" /> Password</label>
-              <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Masukkan password" className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#475569] outline-none focus:border-[#6366f1] transition-colors" />
+              <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" placeholder="Enter password" className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#475569] outline-none focus:border-[#6366f1] transition-colors" />
             </div>
             {mode === "register" && (
               <div>
-                <label className="flex items-center gap-1.5 text-xs font-bold text-[#94a3b8] uppercase mb-1.5"><Lock className="w-3 h-3" /> Konfirmasi Password</label>
-                <input value={confirm} onChange={(e) => setConfirm(e.target.value)} type="password" placeholder="Ulangi password" className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#475569] outline-none focus:border-[#6366f1] transition-colors" />
+                <label className="flex items-center gap-1.5 text-xs font-bold text-[#94a3b8] uppercase mb-1.5"><Lock className="w-3 h-3" /> Confirm Password</label>
+                <input value={confirm} onChange={(e) => setConfirm(e.target.value)} type="password" placeholder="Repeat password" className="w-full bg-[#0a0a0f] border border-[#1e1e2e] rounded-lg px-3 py-2.5 text-sm text-white placeholder-[#475569] outline-none focus:border-[#6366f1] transition-colors" />
               </div>
             )}
             {error && <p className="text-xs text-[#ef4444]">{error}</p>}

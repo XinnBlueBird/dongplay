@@ -15,9 +15,10 @@ export default function Footer() {
           <div className="flex items-center gap-4 text-sm text-[#64748b]">
             <Link href="/" className="hover:text-white transition-colors">Home</Link>
             <Link href="/series" className="hover:text-white transition-colors">Series</Link>
+            <Link href="/history" className="hover:text-white transition-colors">History</Link>
           </div>
           <p className="text-xs text-[#475569] text-center md:text-right">
-            DongPlay 2026 — Tidak berafiliasi dengan donghuafast.site. Semua konten dari sumber publik.
+            DongPlay 2026. All content from public sources.
           </p>
         </div>
       </div>
