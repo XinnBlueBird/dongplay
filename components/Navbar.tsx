@@ -1,140 +1,135 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Play, Search, Menu, X } from "lucide-react";
+import { Play, Search, Menu, X, User, Home, Film, Clock, Bookmark } from "lucide-react";
 import clsx from "clsx";
 
-const links = [
-  { href: "/", label: "Home" },
-  { href: "/browse", label: "Browse" },
-  { href: "/bookmarks", label: "Bookmarks" },
-];
-
 export default function Navbar() {
-  const pathname = usePathname();
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const [loggedIn, setLoggedIn] = useState(false);
+  const pathname = usePathname();
 
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      window.location.href = `/browse?q=${encodeURIComponent(searchQuery.trim())}`;
+  useEffect(() => {
+    const u = localStorage.getItem("dongplay-user");
+    setLoggedIn(!!u);
+  }, []);
+
+  const links = [
+    { href: "/", label: "Home", icon: Home },
+    { href: "/series", label: "Series", icon: Film },
+    { href: "/history", label: "History", icon: Clock },
+    { href: "/bookmarks", label: "Bookmark", icon: Bookmark },
+  ];
+
+  const handleSearch = () => {
+    if (query.trim()) {
+      window.location.href = `/series?q=${encodeURIComponent(query.trim())}`;
     }
-  }
+  };
 
   return (
-    <>
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0f]/95 backdrop-blur border-b border-[#1e1e2e]">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-[#6366f1] flex items-center justify-center">
-              <Play className="w-4 h-4 text-white fill-white" />
-            </div>
-            <span className="text-lg font-bold text-[#e2e8f0]">
-              Dong<span className="text-[#6366f1]">Play</span>
-            </span>
-          </Link>
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-[#0a0a0f]/95 backdrop-blur-md border-b border-[#1e1e2e]">
+      <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2 shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-[#6366f1] flex items-center justify-center">
+            <Play className="w-4 h-4 text-white fill-white" />
+          </div>
+          <span className="text-lg font-bold text-white tracking-tight">
+            Dong<span className="text-[#6366f1]">Play</span>
+          </span>
+        </Link>
 
-          {/* Desktop links */}
-          <div className="hidden md:flex items-center gap-6">
-            {links.map((link) => (
+        {/* Desktop nav */}
+        <div className="hidden md:flex items-center gap-1">
+          {links.map((l) => {
+            const Icon = l.icon;
+            const active = pathname === l.href;
+            return (
               <Link
-                key={link.href}
-                href={link.href}
+                key={l.href}
+                href={l.href}
                 className={clsx(
-                  "text-sm font-medium transition-colors",
-                  pathname === link.href
-                    ? "text-[#6366f1]"
-                    : "text-[#94a3b8] hover:text-[#e2e8f0]"
+                  "flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors",
+                  active ? "text-[#818cf8] bg-[#6366f1]/10" : "text-[#94a3b8] hover:text-white hover:bg-white/5"
                 )}
               >
-                {link.label}
+                <Icon className="w-4 h-4" />
+                {l.label}
               </Link>
-            ))}
-          </div>
-
-          {/* Right side: search + mobile toggle */}
-          <div className="flex items-center gap-3">
-            {/* Search */}
-            {searchOpen ? (
-              <form onSubmit={handleSearch} className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search donghua..."
-                  autoFocus
-                  className="w-40 sm:w-56 px-3 py-1.5 text-sm bg-[#12121a] border border-[#1e1e2e] rounded-lg text-[#e2e8f0] placeholder-[#64748b] outline-none focus:border-[#6366f1]"
-                />
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSearchOpen(false);
-                    setSearchQuery("");
-                  }}
-                  className="p-1.5 text-[#94a3b8] hover:text-[#e2e8f0]"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </form>
-            ) : (
-              <button
-                onClick={() => setSearchOpen(true)}
-                className="p-2 text-[#94a3b8] hover:text-[#e2e8f0] transition-colors"
-                aria-label="Search"
-              >
-                <Search className="w-5 h-5" />
-              </button>
-            )}
-
-            {/* Mobile menu button */}
-            <button
-              onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden p-2 text-[#94a3b8] hover:text-[#e2e8f0]"
-              aria-label="Menu"
-            >
-              {mobileOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <Menu className="w-5 h-5" />
-              )}
-            </button>
-          </div>
+            );
+          })}
         </div>
-      </nav>
+
+        {/* Right */}
+        <div className="flex items-center gap-2">
+          {searchOpen ? (
+            <div className="flex items-center bg-[#12121a] border border-[#1e1e2e] rounded-lg px-3 py-1.5">
+              <Search className="w-4 h-4 text-[#64748b]" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                placeholder="Cari donghua..."
+                className="bg-transparent text-sm text-white placeholder-[#64748b] outline-none ml-2 w-36 md:w-52"
+                autoFocus
+              />
+              <button onClick={() => { setSearchOpen(false); setQuery(""); }}>
+                <X className="w-4 h-4 text-[#64748b]" />
+              </button>
+            </div>
+          ) : (
+            <button onClick={() => setSearchOpen(true)} className="p-2 text-[#94a3b8] hover:text-white transition-colors">
+              <Search className="w-5 h-5" />
+            </button>
+          )}
+          <Link
+            href={loggedIn ? "/profile" : "/login"}
+            className="hidden md:flex p-2 text-[#94a3b8] hover:text-white transition-colors"
+          >
+            <User className="w-5 h-5" />
+          </Link>
+          <button onClick={() => setMobileOpen(!mobileOpen)} className="md:hidden p-2 text-[#94a3b8] hover:text-white">
+            <Menu className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
 
       {/* Mobile drawer */}
       {mobileOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
-          <div
-            className="absolute inset-0 bg-black/60"
+        <div className="md:hidden border-t border-[#1e1e2e] bg-[#0a0a0f] px-4 py-3 space-y-1">
+          {links.map((l) => {
+            const Icon = l.icon;
+            const active = pathname === l.href;
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setMobileOpen(false)}
+                className={clsx(
+                  "flex items-center gap-2 px-3 py-2 rounded-lg text-sm",
+                  active ? "text-[#818cf8] bg-[#6366f1]/10" : "text-[#94a3b8]"
+                )}
+              >
+                <Icon className="w-4 h-4" />
+                {l.label}
+              </Link>
+            );
+          })}
+          <Link
+            href={loggedIn ? "/profile" : "/login"}
             onClick={() => setMobileOpen(false)}
-          />
-          <div className="absolute top-16 left-0 right-0 bg-[#12121a] border-b border-[#1e1e2e] p-4">
-            <div className="flex flex-col gap-3">
-              {links.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  onClick={() => setMobileOpen(false)}
-                  className={clsx(
-                    "px-4 py-2.5 rounded-lg text-sm font-medium transition-colors",
-                    pathname === link.href
-                      ? "text-[#6366f1] bg-[#6366f1]/10"
-                      : "text-[#94a3b8] hover:text-[#e2e8f0] hover:bg-[#1e1e2e]"
-                  )}
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </div>
-          </div>
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-[#94a3b8]"
+          >
+            <User className="w-4 h-4" />
+            {loggedIn ? "Profile" : "Login"}
+          </Link>
         </div>
       )}
-    </>
+    </nav>
   );
 }
